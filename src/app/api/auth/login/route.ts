@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/db"
+import { db, getUserByEmail, initializeDatabase } from "@/lib/db"
 import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
+    // Inicializar banco de dados em produção se necessário
+    if (process.env.NODE_ENV === 'production') {
+      await initializeDatabase()
+    }
+    
     const body = await request.json()
     
     if (!body || typeof body !== 'object') {
@@ -22,10 +27,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuário no banco de dados
-    const user = await db.user.findUnique({
-      where: { email }
-    })
+    // Buscar usuário usando a função com fallback
+    const user = await getUserByEmail(email)
 
     if (!user) {
       return NextResponse.json(

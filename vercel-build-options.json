@@ -1,0 +1,20 @@
+{
+  "buildCommandOptions": [
+    {
+      "name": "Aggressive Fix",
+      "command": "npm run vercel-build"
+    },
+    {
+      "name": "Minimal Build", 
+      "command": "node prisma/minimal-build.js"
+    },
+    {
+      "name": "Direct Prisma",
+      "command": "npx prisma generate && next build"
+    },
+    {
+      "name": "Skip Prisma",
+      "command": "next build"
+    }
+  ]
+}

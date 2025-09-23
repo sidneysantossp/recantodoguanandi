@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { db, getUserByEmail, initializeDatabase } from "@/lib/db"
-import bcrypt from "bcryptjs"
+import { authenticateUser } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    // Inicializar banco de dados em produção se necessário
-    if (process.env.NODE_ENV === 'production') {
-      await initializeDatabase()
-    }
-    
     const body = await request.json()
     
     if (!body || typeof body !== 'object') {
@@ -27,40 +21,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuário usando a função com fallback
-    const user = await getUserByEmail(email)
+    // Autenticar usuário usando o sistema simplificado
+    const result = authenticateUser(email, password, role)
 
-    if (!user) {
+    if (!result.success) {
       return NextResponse.json(
-        { message: "Usuário não encontrado" },
+        { message: result.message },
         { status: 401 }
       )
     }
-
-    // Verificar se o papel do usuário corresponde ao papel solicitado
-    if (user.role !== role) {
-      return NextResponse.json(
-        { message: "Você não tem permissão para acessar como este tipo de usuário" },
-        { status: 403 }
-      )
-    }
-
-    // Verificar a senha
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { message: "Senha incorreta" },
-        { status: 401 }
-      )
-    }
-
-    // Remover a senha do objeto de resposta
-    const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json({
       message: "Login realizado com sucesso",
-      user: userWithoutPassword
+      user: result.user
     })
 
   } catch (error) {

@@ -16,9 +16,62 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  password  String
   name      String?
+  role      Role     @default(COMMON)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relacionamento com Associado (um usuário pode ter um associado)
+  associado  Associado?
+}
+
+enum Role {
+  COMMON
+  ADMIN
+}
+
+model Associado {
+  id              String   @id @default(cuid())
+  nome            String
+  sobrenome       String
+  cpf             String   @unique
+  telefone        String
+  imagemPerfil    String?
+  loteNumero      String
+  loteQuadra      String
+  loteLoteamento  String
+  loteEndereco    String?
+  loteCidade      String?
+  loteEstado      String?
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id])
+  
+  // Relacionamento com Cobranças
+  cobrancas       Cobranca[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Cobranca {
+  id              String   @id @default(cuid())
+  descricao       String
+  valor           Float
+  dataVencimento  DateTime
+  dataPagamento   DateTime?
+  status          Status   @default(PENDENTE)
+  pixCopiaECola   String?
+  associadoId     String
+  associado       Associado @relation(fields: [associadoId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum Status {
+  PENDENTE
+  PAGO
+  ATRASADO
+  CANCELADO
 }
 
 model Post {

@@ -1,141 +1,217 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# Recanto do Guanandi - Plataforma de Gestão Financeira
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+Sistema de gestão financeira para a Associação Recanto do Guanandi, desenvolvido com Next.js 14, TypeScript e Prisma.
 
-## ✨ Technology Stack
+## 🚀 Tecnologias Utilizadas
 
-This scaffold provides a robust foundation built with:
+- **Frontend**: Next.js 14 (App Router)
+- **Linguagem**: TypeScript
+- **Estilização**: Tailwind CSS + shadcn/ui
+- **Banco de Dados**: SQLite com Prisma ORM
+- **Autenticação**: Sistema próprio com JWT (localStorage)
+- **Icons**: Lucide React
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+## 📋 Funcionalidades
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+### 🔐 Autenticação
+- Login para Associados e Administradores
+- Test credentials:
+  - **Admin**: `admin@recanto.com` / `123456`
+  - **Associado**: `associado@recanto.com` / `123456`
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+### 👥 Gestão de Associados (Admin)
+- Cadastro de novos associados
+- Edição de dados de associados
+- Visualização em tabela com busca
+- Geração de cobranças PIX
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+### 💰 Sistema de Cobranças
+- Geração de cobranças PIX
+- Controle de status (Pendente, Pago, Atraso, Cancelado)
+- Códigos PIX copia e cola
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
+### 📊 Dashboard
+- Dashboard para administradores
+- Dashboard para associados
+- Estatísticas e resumos financeiros
 
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
+## 🛠️ Configuração do Ambiente
 
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
+### Pré-requisitos
+- Node.js 18+ instalado
+- npm ou yarn
 
-## 🎯 Why This Scaffold?
-
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
-
-## 🚀 Quick Start
-
+### Instalação
 ```bash
-# Install dependencies
+# Clonar o repositório
+git clone <repositorio>
+cd recanto-guanandi
+
+# Instalar dependências
 npm install
 
-# Start development server
+# Configurar banco de dados
+npx prisma generate
+npx prisma db push
+
+# Popular banco de dados com dados iniciais
+npx tsx scripts/seed.ts
+
+# Iniciar servidor de desenvolvimento
 npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
+### Variáveis de Ambiente
+Crie um arquivo `.env` na raiz do projeto:
 
-## 🤖 Powered by Z.ai
+```env
+DATABASE_URL="file:./dev.db"
+```
 
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
+## 🗄️ Banco de Dados
 
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
+### Desenvolvimento (Local)
+- **Tipo**: SQLite
+- **Localização**: `./db/custom.db`
+- **Vantagens**: 
+  - Fácil configuração
+  - Arquivo único portátil
+  - Ideal para desenvolvimento
 
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+### Produção (Vercel)
+Para produção na Vercel, você tem duas opções:
 
-## 📁 Project Structure
+#### Opção 1: Continuar com SQLite (Recomendado para pequeno/médio porte)
+- **Vantagens**: 
+  - Sem custo adicional
+  - Fácil manutenção
+  - Performance adequada para até 1000 usuários
+- **Configuração**: 
+  - O arquivo SQLite será implantado junto com a aplicação
+  - Funciona bem na Vercel com o Prisma
+
+#### Opção 2: Migrar para PostgreSQL (Recomendado para grande porte)
+- **Serviços sugeridos**:
+  - [Vercel Postgres](https://vercel.com/postgres)
+  - [Supabase](https://supabase.com)
+  - [PlanetScale](https://planetscale.com)
+- **Vantagens**:
+  - Melhor performance para muitos usuários
+  - Escalabilidade
+  - Conexões simultâneas ilimitadas
+- **Migração**:
+  ```bash
+  # Instalar o cliente PostgreSQL
+  npm install pg
+  
+  # Atualizar .env
+  DATABASE_URL="postgresql://user:password@host:port/database"
+  
+  # Gerar cliente Prisma
+  npx prisma generate
+  
+  # Migrar schema
+  npx prisma db push
+  ```
+
+## 🚀 Implantação na Vercel
+
+### Passo a Passo
+1. **Fazer commit do projeto**
+   ```bash
+   git add .
+   git commit -m "Implementação do sistema financeiro"
+   ```
+
+2. **Enviar para GitHub**
+   ```bash
+   git remote add origin <seu-repositorio-github>
+   git push -u origin main
+   ```
+
+3. **Configurar na Vercel**
+   - Acesse [vercel.com](https://vercel.com)
+   - Importe o repositório do GitHub
+   - Configure as variáveis de ambiente:
+     - `DATABASE_URL`: URL do banco de dados
+   - Clique em "Deploy"
+
+### Configurações Adicionais
+- **Framework**: Next.js (detectado automaticamente)
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Install Command**: `npm install`
+
+## 📁 Estrutura do Projeto
 
 ```
 src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── app/                    # Rotas da aplicação
+│   ├── api/               # API Routes
+│   ├── admin/             # Rotas admin
+│   ├── user/              # Rotas usuário
+│   └── globals.css        # Estilos globais
+├── components/            # Componentes React
+│   ├── ui/                # Componentes shadcn/ui
+│   └── *.tsx              # Componentes custom
+├── hooks/                 # Custom hooks
+├── lib/                   # Utilitários
+│   ├── db.ts              # Cliente Prisma
+│   └── utils.ts           # Funções utilitárias
+├── prisma/                # Schema e migrations
+└── scripts/               # Scripts de utilidade
 ```
 
-## 🎨 Available Features & Components
+## 🔧 Scripts Úteis
 
-This scaffold includes a comprehensive set of modern web development tools:
+```bash
+# Desenvolvimento
+npm run dev
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+# Build para produção
+npm run build
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+# Iniciar servidor de produção
+npm start
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+# Gerar Prisma Client
+npx prisma generate
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+# Sincronizar schema com banco
+npx prisma db push
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+# Visualizar banco de dados
+npx prisma studio
 
-## 🤝 Get Started with Z.ai
+# Popular banco com dados iniciais
+npx tsx scripts/seed.ts
+```
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+## 📝 Notas Importantes
 
----
+### Segurança
+- Em produção, considere usar cookies seguros em vez de localStorage
+- Implementar HTTPS obrigatório
+- Validar todos os inputs do usuário
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+### Performance
+- As imagens devem ser otimizadas para web
+- Considerar implementar cache para dados frequentes
+- Monitorar performance com Vercel Analytics
+
+### Escalabilidade
+- SQLite é adequado para aplicações pequenas/médias
+- Para crescimento, considerar PostgreSQL
+- Implementar paginação em listas grandes
+
+## 🤝 Contribuição
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Crie um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob licença da Associação Recanto do Guanandi.

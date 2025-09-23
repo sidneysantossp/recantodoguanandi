@@ -13,6 +13,8 @@ interface User {
   role: "COMMON" | "ADMIN"
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null)
   const router = useRouter()

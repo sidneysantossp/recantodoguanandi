@@ -14,21 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Recanto do Guanandi - Plataforma de Gestão Financeira",
+  description: "Sistema de gestão financeira para Associação Recanto do Guanandi",
+  keywords: ["Recanto do Guanandi", "Finanças", "Gestão", "Associação"],
+  authors: [{ name: "Associação Recanto do Guanandi" }],
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Recanto do Guanandi - Plataforma de Gestão Financeira",
+    description: "Sistema de gestão financeira para Associação Recanto do Guanandi",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 

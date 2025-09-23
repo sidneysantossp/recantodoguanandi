@@ -4,7 +4,16 @@ import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, role } = await request.json()
+    const body = await request.json()
+    
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { message: "Corpo da requisição inválido" },
+        { status: 400 }
+      )
+    }
+
+    const { email, password, role } = body
 
     if (!email || !password || !role) {
       return NextResponse.json(

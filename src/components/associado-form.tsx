@@ -1,336 +1,331 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Upload, X } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { Associado, CreateAssociadoData, UpdateAssociadoData } from '@/lib/data-store'
 
 interface AssociadoFormProps {
-  onSubmit: (data: AssociadoFormData) => void
+  associado?: Associado | null
+  onSave: (associado: Associado) => void
   onCancel: () => void
-  initialData?: Partial<AssociadoFormData>
   isLoading?: boolean
 }
 
-export interface AssociadoFormData {
-  nome: string
-  sobrenome: string
-  cpf: string
-  telefone: string
-  email: string
-  senha: string
-  loteNumero: string
-  loteQuadra: string
-  loteLoteamento: string
-  loteEndereco?: string
-  loteCidade?: string
-  loteEstado?: string
-  imagemPerfil?: string
-}
-
-export function AssociadoForm({ onSubmit, onCancel, initialData, isLoading = false }: AssociadoFormProps) {
-  const [formData, setFormData] = useState<AssociadoFormData>({
-    nome: initialData?.nome || "",
-    sobrenome: initialData?.sobrenome || "",
-    cpf: initialData?.cpf || "",
-    telefone: initialData?.telefone || "",
-    email: initialData?.email || "",
-    senha: initialData?.senha || "",
-    loteNumero: initialData?.loteNumero || "",
-    loteQuadra: initialData?.loteQuadra || "",
-    loteLoteamento: initialData?.loteLoteamento || "",
-    loteEndereco: initialData?.loteEndereco || "",
-    loteCidade: initialData?.loteCidade || "",
-    loteEstado: initialData?.loteEstado || "",
-    imagemPerfil: initialData?.imagemPerfil || ""
+export function AssociadoForm({ associado, onSave, onCancel, isLoading = false }: AssociadoFormProps) {
+  const { toast } = useToast()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    status: 'ativo' as 'ativo' | 'inativo' | 'pendente',
+    monthlyFee: 150.00,
+    address: '',
+    city: '',
+    state: '',
+    cep: ''
   })
 
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.imagemPerfil || null
-  )
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
+  useEffect(() => {
+    if (associado) {
+      setFormData({
+        name: associado.name,
+        email: associado.email,
+        phone: associado.phone,
+        status: associado.status,
+        monthlyFee: associado.monthlyFee,
+        address: associado.address || '',
+        city: associado.city || '',
+        state: associado.state || '',
+        cep: associado.cep || ''
+      })
+    }
+  }, [associado])
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório'
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório'
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Email inválido'
+      }
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Telefone é obrigatório'
+    }
+
+    if (!formData.monthlyFee || formData.monthlyFee <= 0) {
+      newErrors.monthlyFee = 'Mensalidade deve ser maior que zero'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const handleInputChange = (field: keyof AssociadoFormData, value: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
+    try {
+      const url = associado 
+        ? `/api/associados/${associado.id}`
+        : '/api/associados'
+      
+      const method = associado ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast({
+          title: associado ? 'Associado atualizado!' : 'Associado criado!',
+          description: data.message,
+        })
+        onSave(data.data)
+      } else {
+        toast({
+          title: 'Erro',
+          description: data.message || 'Ocorreu um erro ao salvar o associado.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o associado. Tente novamente.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
-  }
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setImagePreview(result)
-        handleInputChange("imagemPerfil", result)
-      }
-      reader.readAsDataURL(file)
+    
+    // Limpar erro quando o campo é alterado
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
     }
   }
 
-  const removeImage = () => {
-    setImagePreview(null)
-    handleInputChange("imagemPerfil", "")
-  }
-
-  const formatCPF = (value: string) => {
-    return value
-      .replace(/\D/g, "")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
-  }
-
-  const formatTelefone = (value: string) => {
-    return value
-      .replace(/\D/g, "")
-      .replace(/(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{5})(\d)/, "$1-$2")
-  }
-
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>{initialData ? "Editar Associado" : "Novo Associado"}</CardTitle>
+        <CardTitle>
+          {associado ? 'Editar Associado' : 'Novo Associado'}
+        </CardTitle>
         <CardDescription>
-          Preencha os dados do associado e informações do loteamento
+          {associado 
+            ? 'Atualize as informações do associado'
+            : 'Preencha os dados para cadastrar um novo associado'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Foto de Perfil */}
-          <div className="flex flex-col items-center space-y-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={imagePreview || undefined} />
-              <AvatarFallback className="text-lg">
-                {formData.nome ? formData.nome[0] : "?"}
-                {formData.sobrenome ? formData.sobrenome[0] : "?"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="imagem" className="cursor-pointer">
-                <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm">Foto de Perfil</span>
-                </div>
-              </Label>
-              <Input
-                id="imagem"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-                disabled={isLoading}
-              />
-              {imagePreview && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={removeImage}
-                  disabled={isLoading}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
           {/* Dados Pessoais */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Dados Pessoais</h3>
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+              Dados Pessoais
+            </h3>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome *</Label>
+                <Label htmlFor="name">Nome Completo *</Label>
                 <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => handleInputChange("nome", e.target.value)}
-                  disabled={isLoading}
-                  required
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="João Silva"
+                  className={errors.name ? 'border-red-500' : ''}
                 />
+                {errors.name && (
+                  <p className="text-sm text-red-600">{errors.name}</p>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="sobrenome">Sobrenome *</Label>
-                <Input
-                  id="sobrenome"
-                  value={formData.sobrenome}
-                  onChange={(e) => handleInputChange("sobrenome", e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cpf">CPF *</Label>
-                <Input
-                  id="cpf"
-                  value={formData.cpf}
-                  onChange={(e) => handleInputChange("cpf", formatCPF(e.target.value))}
-                  placeholder="000.000.000-00"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone *</Label>
-                <Input
-                  id="telefone"
-                  value={formData.telefone}
-                  onChange={(e) => handleInputChange("telefone", formatTelefone(e.target.value))}
-                  placeholder="(00) 00000-0000"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Dados de Acesso */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Dados de Acesso</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="associado@recanto.com"
-                  disabled={isLoading}
-                  required
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="joao.silva@email.com"
+                  className={errors.email ? 'border-red-500' : ''}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="senha">Senha *</Label>
-                <Input
-                  id="senha"
-                  type="password"
-                  value={formData.senha}
-                  onChange={(e) => handleInputChange("senha", e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Dados do Lote */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Dados do Lote</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="loteLoteamento">Loteamento *</Label>
+                <Label htmlFor="phone">Telefone *</Label>
                 <Input
-                  id="loteLoteamento"
-                  value={formData.loteLoteamento}
-                  onChange={(e) => handleInputChange("loteLoteamento", e.target.value)}
-                  disabled={isLoading}
-                  required
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="(11) 99999-8888"
+                  className={errors.phone ? 'border-red-500' : ''}
                 />
+                {errors.phone && (
+                  <p className="text-sm text-red-600">{errors.phone}</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="loteQuadra">Quadra *</Label>
-                <Input
-                  id="loteQuadra"
-                  value={formData.loteQuadra}
-                  onChange={(e) => handleInputChange("loteQuadra", e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="loteNumero">Número do Lote *</Label>
-                <Input
-                  id="loteNumero"
-                  value={formData.loteNumero}
-                  onChange={(e) => handleInputChange("loteNumero", e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="loteEndereco">Endereço</Label>
-                <Input
-                  id="loteEndereco"
-                  value={formData.loteEndereco}
-                  onChange={(e) => handleInputChange("loteEndereco", e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="loteCidade">Cidade</Label>
-                <Input
-                  id="loteCidade"
-                  value={formData.loteCidade}
-                  onChange={(e) => handleInputChange("loteCidade", e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="loteEstado">Estado</Label>
-                <Select
-                  value={formData.loteEstado}
-                  onValueChange={(value) => handleInputChange("loteEstado", value)}
-                  disabled={isLoading}
+                <Label htmlFor="status">Status *</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value: 'ativo' | 'inativo' | 'pendente') => 
+                    handleInputChange('status', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
+                    <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AC">Acre</SelectItem>
-                    <SelectItem value="AL">Alagoas</SelectItem>
-                    <SelectItem value="AP">Amapá</SelectItem>
-                    <SelectItem value="AM">Amazonas</SelectItem>
-                    <SelectItem value="BA">Bahia</SelectItem>
-                    <SelectItem value="CE">Ceará</SelectItem>
-                    <SelectItem value="DF">Distrito Federal</SelectItem>
-                    <SelectItem value="ES">Espírito Santo</SelectItem>
-                    <SelectItem value="GO">Goiás</SelectItem>
-                    <SelectItem value="MA">Maranhão</SelectItem>
-                    <SelectItem value="MT">Mato Grosso</SelectItem>
-                    <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
-                    <SelectItem value="MG">Minas Gerais</SelectItem>
-                    <SelectItem value="PA">Pará</SelectItem>
-                    <SelectItem value="PB">Paraíba</SelectItem>
-                    <SelectItem value="PR">Paraná</SelectItem>
-                    <SelectItem value="PE">Pernambuco</SelectItem>
-                    <SelectItem value="PI">Piauí</SelectItem>
-                    <SelectItem value="RJ">Rio de Janeiro</SelectItem>
-                    <SelectItem value="RN">Rio Grande do Norte</SelectItem>
-                    <SelectItem value="RS">Rio Grande do Sul</SelectItem>
-                    <SelectItem value="RO">Rondônia</SelectItem>
-                    <SelectItem value="RR">Roraima</SelectItem>
-                    <SelectItem value="SC">Santa Catarina</SelectItem>
-                    <SelectItem value="SP">São Paulo</SelectItem>
-                    <SelectItem value="SE">Sergipe</SelectItem>
-                    <SelectItem value="TO">Tocantins</SelectItem>
+                    <SelectItem value="ativo">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-green-100 text-green-800">Ativo</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="pendente">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="inativo">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-red-100 text-red-800">Inativo</Badge>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
 
-          {/* Botões */}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          {/* Dados Financeiros */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+              Dados Financeiros
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="monthlyFee">Mensalidade (R$) *</Label>
+                <Input
+                  id="monthlyFee"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.monthlyFee}
+                  onChange={(e) => handleInputChange('monthlyFee', parseFloat(e.target.value) || 0)}
+                  placeholder="150.00"
+                  className={errors.monthlyFee ? 'border-red-500' : ''}
+                />
+                {errors.monthlyFee && (
+                  <p className="text-sm text-red-600">{errors.monthlyFee}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Endereço */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+              Endereço (Opcional)
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="address">Rua</Label>
+                <Input
+                  id="address"
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  placeholder="Rua das Flores, 123"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  placeholder="São Paulo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado</Label>
+                <Input
+                  id="state"
+                  type="text"
+                  value={formData.state}
+                  onChange={(e) => handleInputChange('state', e.target.value)}
+                  placeholder="SP"
+                  maxLength={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cep">CEP</Label>
+                <Input
+                  id="cep"
+                  type="text"
+                  value={formData.cep}
+                  onChange={(e) => handleInputChange('cep', e.target.value)}
+                  placeholder="01234-567"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="flex justify-end space-x-4 pt-6 border-t">
+            <Button type="button" variant="outline" onClick={onCancel}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isLoading}>
-              {isLoading ? "Salvando..." : initialData ? "Atualizar" : "Cadastrar"}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : (associado ? 'Atualizar' : 'Criar')}
             </Button>
           </div>
         </form>

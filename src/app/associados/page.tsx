@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { AssociadoModal } from '@/components/associado-modal'
+import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog'
+import { useToast } from '@/hooks/use-toast'
 import { 
   Users, 
   Search, 
@@ -15,8 +18,10 @@ import {
   Mail,
   Phone,
   Calendar,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react'
+import { Associado } from '@/lib/data-store'
 
 interface User {
   id: string
@@ -25,22 +30,17 @@ interface User {
   role: 'ADMIN' | 'COMMON'
 }
 
-interface Associado {
-  id: string
-  name: string
-  email: string
-  phone: string
-  status: 'ativo' | 'inativo' | 'pendente'
-  joinDate: string
-  lastPayment: string
-  monthlyFee: number
-}
-
 export default function AssociadosPage() {
   const [user, setUser] = useState<User | null>(null)
   const [mounted, setMounted] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [associados, setAssociados] = useState<Associado[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedAssociado, setSelectedAssociado] = useState<Associado | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     setMounted(true)
@@ -56,62 +56,101 @@ export default function AssociadosPage() {
       }
     }
 
-    // Dados mock de associados
-    const mockAssociados: Associado[] = [
-      {
-        id: '1',
-        name: 'João Silva',
-        email: 'joao.silva@email.com',
-        phone: '(11) 99999-8888',
-        status: 'ativo',
-        joinDate: '2023-01-15',
-        lastPayment: '2024-11-15',
-        monthlyFee: 150.00
-      },
-      {
-        id: '2',
-        name: 'Maria Santos',
-        email: 'maria.santos@email.com',
-        phone: '(11) 98888-7777',
-        status: 'ativo',
-        joinDate: '2023-03-20',
-        lastPayment: '2024-11-10',
-        monthlyFee: 150.00
-      },
-      {
-        id: '3',
-        name: 'Pedro Oliveira',
-        email: 'pedro.oliveira@email.com',
-        phone: '(11) 97777-6666',
-        status: 'pendente',
-        joinDate: '2023-06-10',
-        lastPayment: '2024-10-15',
-        monthlyFee: 150.00
-      },
-      {
-        id: '4',
-        name: 'Ana Costa',
-        email: 'ana.costa@email.com',
-        phone: '(11) 96666-5555',
-        status: 'inativo',
-        joinDate: '2023-02-28',
-        lastPayment: '2024-08-15',
-        monthlyFee: 150.00
-      },
-      {
-        id: '5',
-        name: 'Carlos Ferreira',
-        email: 'carlos.ferreira@email.com',
-        phone: '(11) 95555-4444',
-        status: 'ativo',
-        joinDate: '2023-04-05',
-        lastPayment: '2024-11-12',
-        monthlyFee: 150.00
-      }
-    ]
-
-    setAssociados(mockAssociados)
+    // Carregar associados
+    loadAssociados()
   }, [])
+
+  // Carregar associados da API
+  const loadAssociados = async () => {
+    try {
+      setIsRefreshing(true)
+      const response = await fetch('/api/associados')
+      const data = await response.json()
+      
+      if (data.success) {
+        setAssociados(data.data)
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar associados.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar associados. Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  // Abrir modal para criar novo associado
+  const handleCreate = () => {
+    setSelectedAssociado(null)
+    setIsModalOpen(true)
+  }
+
+  // Abrir modal para editar associado
+  const handleEdit = (associado: Associado) => {
+    setSelectedAssociado(associado)
+    setIsModalOpen(true)
+  }
+
+  // Abrir diálogo de confirmação para deletar
+  const handleDelete = (associado: Associado) => {
+    setSelectedAssociado(associado)
+    setIsDeleteDialogOpen(true)
+  }
+
+  // Salvar associado (criar ou atualizar)
+  const handleSave = (savedAssociado: Associado) => {
+    loadAssociados()
+    toast({
+      title: selectedAssociado ? 'Associado atualizado!' : 'Associado criado!',
+      description: `O associado ${savedAssociado.name} foi salvo com sucesso.`,
+    })
+  }
+
+  // Confirmar exclusão
+  const handleConfirmDelete = async () => {
+    if (!selectedAssociado) return
+
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/associados/${selectedAssociado.id}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        loadAssociados()
+        toast({
+          title: 'Associado deletado!',
+          description: `O associado ${selectedAssociado.name} foi removido com sucesso.`,
+        })
+      } else {
+        toast({
+          title: 'Erro',
+          description: data.message || 'Erro ao deletar associado.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao deletar associado. Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+      setIsDeleteDialogOpen(false)
+      setSelectedAssociado(null)
+    }
+  }
 
   const getStatusColor = (status: Associado['status']) => {
     switch (status) {
@@ -148,10 +187,19 @@ export default function AssociadosPage() {
             <h1 className="text-2xl font-bold text-gray-900">Gestão de Associados</h1>
             <p className="text-gray-600">Gerencie todos os associados da associação</p>
           </div>
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Associado
-          </Button>
+          <div className="flex items-center space-x-2">
+            {isRefreshing && (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            )}
+            <Button 
+              className="flex items-center gap-2" 
+              onClick={handleCreate}
+              disabled={isRefreshing}
+            >
+              <Plus className="h-4 w-4" />
+              Novo Associado
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -297,10 +345,21 @@ export default function AssociadosPage() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEdit(associado)}
+                            disabled={isRefreshing}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDelete(associado)}
+                            disabled={isRefreshing}
+                            className="text-red-600 hover:text-red-800"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -319,6 +378,22 @@ export default function AssociadosPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Modais */}
+        <AssociadoModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          associado={selectedAssociado}
+          onSave={handleSave}
+        />
+
+        <DeleteConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={handleConfirmDelete}
+          associado={selectedAssociado}
+          isLoading={isLoading}
+        />
       </div>
     </DashboardLayout>
   )

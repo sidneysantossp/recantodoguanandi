@@ -44,9 +44,9 @@ export default function Home() {
         
         // Redirecionar para o dashboard apropriado
         if (role === "ADMIN") {
-          router.push("/simple-dashboard")
+          router.push("/dashboard")
         } else {
-          router.push("/simple-dashboard")
+          router.push("/dashboard")
         }
       } else {
         toast({

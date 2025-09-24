@@ -1,5 +1,5 @@
 // Sistema de autenticação simplificado para produção
-// Funciona mesmo sem banco de dados
+// Funciona mesmo sem banco de dados - 100% independente
 
 export interface User {
   id: string
@@ -11,12 +11,12 @@ export interface User {
   updatedAt: string
 }
 
-// Usuários fixos para todos os ambientes
+// Usuários fixos para todos os ambientes - sem dependência de banco de dados
 const USERS: User[] = [
   {
     id: '1',
     email: 'admin@recanto.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // 123456
+    password: '123456_hash', // Senha: 123456
     name: 'Administrador',
     role: 'ADMIN',
     createdAt: new Date().toISOString(),
@@ -25,7 +25,7 @@ const USERS: User[] = [
   {
     id: '2',
     email: 'associado@recanto.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // 123456
+    password: '123456_hash', // Senha: 123456
     name: 'Associado Teste',
     role: 'COMMON',
     createdAt: new Date().toISOString(),
@@ -33,21 +33,35 @@ const USERS: User[] = [
   },
 ]
 
-// Função para buscar usuário por email
+// Função para buscar usuário por email - 100% síncrona
 export function getUserByEmail(email: string): User | null {
-  return USERS.find(user => user.email === email) || null
+  try {
+    return USERS.find(user => user.email === email) || null
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error)
+    return null
+  }
 }
 
-// Função para verificar senha (simplificada)
-export function verifyPassword(password: string, hashedPassword: string): boolean {
-  // Verificação manual para senha 123456
-  const correctHash = '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
-  return password === '123456' && hashedPassword === correctHash
+// Função para verificar senha - 100% síncrona e simples
+export function verifyPassword(password: string, storedPassword: string): boolean {
+  try {
+    // Verificação simples para senha 123456
+    return password === '123456' && storedPassword === '123456_hash'
+  } catch (error) {
+    console.error('Erro ao verificar senha:', error)
+    return false
+  }
 }
 
-// Função para autenticar usuário
+// Função para autenticar usuário - 100% síncrona
 export function authenticateUser(email: string, password: string, role: 'ADMIN' | 'COMMON'): { success: boolean; user?: Omit<User, 'password'>; message?: string } {
   try {
+    // Validação básica
+    if (!email || !password || !role) {
+      return { success: false, message: 'Email, senha e papel são obrigatórios' }
+    }
+    
     const user = getUserByEmail(email)
     
     if (!user) {

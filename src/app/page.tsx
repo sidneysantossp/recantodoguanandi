@@ -15,7 +15,9 @@ export default function Home() {
     setIsLoading(true)
     
     try {
-      const response = await fetch("/api/auth/login", {
+      console.log("🚀 Tentando login com:", { email, role })
+      
+      const response = await fetch("/api/simple-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -23,13 +25,15 @@ export default function Home() {
         body: JSON.stringify({
           email,
           password,
-          role,
         }),
       })
 
+      console.log("📡 Status da resposta:", response.status)
+      
       const data = await response.json()
+      console.log("📦 Resposta recebida:", data)
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         // Armazenar informações do usuário no localStorage
         localStorage.setItem("user", JSON.stringify(data.user))
         
@@ -40,9 +44,9 @@ export default function Home() {
         
         // Redirecionar para o dashboard apropriado
         if (role === "ADMIN") {
-          router.push("/admin/dashboard")
+          router.push("/simple-dashboard")
         } else {
-          router.push("/user/dashboard")
+          router.push("/simple-dashboard")
         }
       } else {
         toast({
@@ -52,6 +56,7 @@ export default function Home() {
         })
       }
     } catch (error) {
+      console.error("💥 Erro no login:", error)
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao tentar fazer login. Tente novamente.",

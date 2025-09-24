@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { authenticateUser } from "@/lib/auth"
 
+// API de login simplificada para produção
 export async function POST(request: NextRequest) {
   try {
+    // Parse do corpo da requisição
     const body = await request.json()
     
+    // Validação básica
     if (!body || typeof body !== 'object') {
       return NextResponse.json(
         { message: "Corpo da requisição inválido" },
@@ -14,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     const { email, password, role } = body
 
+    // Verificar campos obrigatórios
     if (!email || !password || !role) {
       return NextResponse.json(
         { message: "Email, senha e papel são obrigatórios" },
@@ -31,6 +35,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Retornar sucesso
     return NextResponse.json({
       message: "Login realizado com sucesso",
       user: result.user

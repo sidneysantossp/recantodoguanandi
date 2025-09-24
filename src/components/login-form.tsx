@@ -44,6 +44,12 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
         <CardDescription className="text-gray-600">
           Faça login para acessar a plataforma
         </CardDescription>
+        
+        {/* Credenciais de teste */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <p className="text-sm font-medium text-yellow-800">Credenciais de Teste:</p>
+          <p className="text-xs text-yellow-700">Email: test@test.com | Senha: 123</p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,7 +71,7 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
                 <Input
                   id="email-common"
                   type="email"
-                  placeholder="associado@recanto.com"
+                  placeholder="test@test.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -80,7 +86,7 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
                 <Input
                   id="email-admin"
                   type="email"
-                  placeholder="admin@recanto.com"
+                  placeholder="test@test.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -96,7 +102,7 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Digite sua senha"
+                placeholder="123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}

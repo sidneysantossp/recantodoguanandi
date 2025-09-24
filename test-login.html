@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Login</title>
+</head>
+<body>
+    <h1>Teste de Login</h1>
+    <div id="status">Aguardando teste...</div>
+    
+    <script>
+        async function testLogin() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                statusDiv.innerHTML = 'Testando login...';
+                
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@recanto.com',
+                        password: '123456',
+                        role: 'ADMIN'
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <h2>✅ Sucesso!</h2>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <h2>❌ Erro!</h2>
+                        <p>Status: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <h2>❌ Erro de rede!</h2>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        // Testar automaticamente
+        testLogin();
+    </script>
+</body>
+</html>
